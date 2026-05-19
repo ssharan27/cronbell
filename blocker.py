@@ -42,11 +42,7 @@ tk.Label(frame, text=title, bg="black", fg="white",
 tk.Label(frame, text=message, bg="black", fg="#cccccc",
          font=("sans-serif", 18), wraplength=800, justify="center").pack()
 
-if dismissable:
-    tk.Label(frame, text="Press Esc or click anywhere to dismiss",
-             bg="black", fg="#444444", font=("sans-serif", 11)).pack(pady=(32, 0))
-else:
-    tk.Label(frame, text="", bg="black").pack(pady=(32, 0))
+tk.Label(frame, text="", bg="black").pack(pady=(32, 0))
 
 countdown_var = tk.StringVar(value=f"closes in {duration}s")
 tk.Label(frame, textvariable=countdown_var, bg="black", fg="#555555",
@@ -87,16 +83,18 @@ for label_text, mins in [("5 min", 5), ("10 min", 10), ("30 min", 30), ("1 hour"
               font=("sans-serif", 10, "bold"),
               command=lambda m=mins: write_snooze(m)).pack(side="left", padx=(0, 8))
 
+# ── Dismiss button — top-right corner ────────────────────────────────────────
+if dismissable:
+    tk.Button(root, text="✕ Dismiss",
+              bg="#1a1a1a", fg="#888888",
+              activebackground="#334155", activeforeground="white",
+              relief="flat", bd=0, padx=14, pady=8, cursor="hand2",
+              font=("sans-serif", 10),
+              command=root.destroy).place(relx=1.0, rely=0.0, anchor="ne", x=-20, y=20)
+
 # ── Action row ────────────────────────────────────────────────────────────────
 action_row = tk.Frame(frame, bg="black")
 action_row.pack(pady=(14, 0))
-
-if dismissable:
-    tk.Button(action_row, text="Dismiss",
-              bg="#0f172a", fg="#94a3b8", activebackground="#1e293b", activeforeground="white",
-              relief="flat", bd=0, padx=14, pady=7, cursor="hand2",
-              font=("sans-serif", 10),
-              command=root.destroy).pack(side="left")
 
 if one_off:
     def follow_up():
@@ -124,7 +122,6 @@ def tick():
 root.after(1000, tick)
 
 if dismissable:
-    root.bind("<Escape>",   lambda _: root.destroy())
-    root.bind("<Button-1>", lambda _: root.destroy())
+    root.bind("<Escape>", lambda _: root.destroy())
 
 root.mainloop()
