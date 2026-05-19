@@ -1,0 +1,12 @@
+[Unit]
+Description=Reminders Web UI
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -u INSTALL_DIR/reminders.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
