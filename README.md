@@ -2,6 +2,8 @@
 
 > Cron-backed desktop reminders with a local web UI — no cloud, no account, no background app.
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+
 **Linux only.** cronbell relies on `crontab`, `systemd --user`, `tkinter`, and X11/Wayland display detection. It does not run on macOS or Windows.
 
 ---
@@ -33,13 +35,51 @@ You set reminders through a browser UI at `http://localhost:8765`. Each reminder
 
 ## Install
 
+### 1. Install system dependencies
+
 ```bash
-git clone https://github.com/<you>/cronbell.git
+# Debian / Ubuntu
+sudo apt install python3-tk libnotify-bin
+
+# Fedora / RHEL
+sudo dnf install python3-tkinter libnotify
+```
+
+### 2. Clone the repo
+
+```bash
+git clone https://github.com/ssharan27/cronbell.git
 cd cronbell
+```
+
+### 3. Run the install script
+
+```bash
 ./install.sh
 ```
 
-Open **http://localhost:8765**. The service starts automatically on every login.
+This will:
+- Write `~/.config/systemd/user/reminders.service`
+- Enable and start the service immediately
+- Make `notify.sh` executable
+
+### 4. Open the UI
+
+Go to **http://localhost:8765** in your browser. The service starts automatically on every login — no need to run anything manually again.
+
+### Verify it's running
+
+```bash
+systemctl --user status reminders
+```
+
+### Uninstall
+
+```bash
+systemctl --user disable --now reminders
+rm ~/.config/systemd/user/reminders.service
+rm -f ~/.reminders.json ~/.reminders-snooze.json
+```
 
 ---
 
