@@ -409,6 +409,46 @@ textarea { resize: vertical; min-height: 72px; }
 .check-pill input { display: none; }
 .check-pill.on { border-color: var(--accent); background: #ede9fe; color: var(--accent); }
 
+/* ── Day pills ── */
+.day-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.day-pill {
+  padding: 6px 11px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: .8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+.day-pill.on { border-color: var(--accent); background: #ede9fe; color: var(--accent); }
+[data-theme="dark"] .day-pill.on { background: #312e81; color: #a5b4fc; }
+
+/* ── AM/PM time picker ── */
+.time-picker { display: flex; align-items: center; gap: 4px; }
+.time-picker select { width: auto; padding: 9px 8px; }
+.time-colon { font-weight: 700; color: var(--muted); padding: 0 2px; }
+.ampm-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  margin-left: 4px;
+}
+.ampm-btn {
+  padding: 8px 11px;
+  border: none;
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: .8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.ampm-btn.active { background: var(--accent); color: #fff; }
+
 .hidden { display: none !important; }
 </style>
 </head>
@@ -448,11 +488,9 @@ textarea { resize: vertical; min-height: 72px; }
         <label>Schedule</label>
         <div class="seg-group" role="tablist">
           <button type="button" class="seg-btn active" data-t="interval" onclick="setSched('interval')">Interval</button>
-          <button type="button" class="seg-btn"        data-t="daily"    onclick="setSched('daily')">Daily</button>
-          <button type="button" class="seg-btn"        data-t="weekdays" onclick="setSched('weekdays')">Weekdays</button>
-          <button type="button" class="seg-btn"        data-t="weekly"   onclick="setSched('weekly')">Weekly</button>
-          <button type="button" class="seg-btn"        data-t="custom"   onclick="setSched('custom')">Custom</button>
+          <button type="button" class="seg-btn"        data-t="days"     onclick="setSched('days')">Days</button>
           <button type="button" class="seg-btn"        data-t="once"     onclick="setSched('once')">Once</button>
+          <button type="button" class="seg-btn"        data-t="custom"   onclick="setSched('custom')">Custom</button>
         </div>
 
         <!-- Interval -->
@@ -470,39 +508,41 @@ textarea { resize: vertical; min-height: 72px; }
           </div>
         </div>
 
-        <!-- Daily -->
-        <div id="s-daily" class="sched-row hidden">
-          <div class="form-group">
-            <label for="f-dtime">At time</label>
-            <input type="text" id="f-dtime" placeholder="HH:MM" value="09:00" oninput="updatePreview()">
+        <!-- Days -->
+        <div id="s-days" class="hidden">
+          <div class="form-group" style="margin-bottom:12px">
+            <label>Days</label>
+            <div class="day-group">
+              <button type="button" class="day-pill on" data-day="1" onclick="toggleDay(this)">Mon</button>
+              <button type="button" class="day-pill on" data-day="2" onclick="toggleDay(this)">Tue</button>
+              <button type="button" class="day-pill on" data-day="3" onclick="toggleDay(this)">Wed</button>
+              <button type="button" class="day-pill on" data-day="4" onclick="toggleDay(this)">Thu</button>
+              <button type="button" class="day-pill on" data-day="5" onclick="toggleDay(this)">Fri</button>
+              <button type="button" class="day-pill"    data-day="6" onclick="toggleDay(this)">Sat</button>
+              <button type="button" class="day-pill"    data-day="0" onclick="toggleDay(this)">Sun</button>
+            </div>
           </div>
-        </div>
-
-        <!-- Weekdays -->
-        <div id="s-weekdays" class="sched-row hidden">
-          <div class="form-group">
-            <label for="f-wdtime">At time</label>
-            <input type="text" id="f-wdtime" placeholder="HH:MM" value="09:30" oninput="updatePreview()">
-          </div>
-        </div>
-
-        <!-- Weekly -->
-        <div id="s-weekly" class="sched-row hidden">
-          <div class="form-group">
-            <label for="f-wday">Day</label>
-            <select id="f-wday" onchange="updatePreview()">
-              <option value="1">Monday</option>
-              <option value="2">Tuesday</option>
-              <option value="3">Wednesday</option>
-              <option value="4">Thursday</option>
-              <option value="5">Friday</option>
-              <option value="6">Saturday</option>
-              <option value="0">Sunday</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="f-wtime">At time</label>
-            <input type="text" id="f-wtime" placeholder="HH:MM" value="10:00" oninput="updatePreview()">
+          <div class="form-group" style="margin-bottom:0">
+            <label>At</label>
+            <div class="time-picker">
+              <select id="days-hour" onchange="updatePreview()">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option><option value="9" selected>9</option>
+                <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+              </select>
+              <span class="time-colon">:</span>
+              <select id="days-min" onchange="updatePreview()">
+                <option value="0" selected>00</option><option value="5">05</option><option value="10">10</option>
+                <option value="15">15</option><option value="20">20</option><option value="25">25</option>
+                <option value="30">30</option><option value="35">35</option><option value="40">40</option>
+                <option value="45">45</option><option value="50">50</option><option value="55">55</option>
+              </select>
+              <div class="ampm-toggle">
+                <button type="button" class="ampm-btn active" id="days-am" onclick="setAmPm('days','am')">AM</button>
+                <button type="button" class="ampm-btn"        id="days-pm" onclick="setAmPm('days','pm')">PM</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -520,9 +560,27 @@ textarea { resize: vertical; min-height: 72px; }
             <label for="f-once-date">Date</label>
             <input type="date" id="f-once-date" oninput="updatePreview()">
           </div>
-          <div class="form-group" style="flex:1;min-width:100px;margin-bottom:0">
-            <label for="f-once-time">Time</label>
-            <input type="time" id="f-once-time" value="09:00" oninput="updatePreview()">
+          <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0">
+            <label>Time</label>
+            <div class="time-picker">
+              <select id="once-hour" onchange="updatePreview()">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option><option value="9" selected>9</option>
+                <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+              </select>
+              <span class="time-colon">:</span>
+              <select id="once-min" onchange="updatePreview()">
+                <option value="0" selected>00</option><option value="5">05</option><option value="10">10</option>
+                <option value="15">15</option><option value="20">20</option><option value="25">25</option>
+                <option value="30">30</option><option value="35">35</option><option value="40">40</option>
+                <option value="45">45</option><option value="50">50</option><option value="55">55</option>
+              </select>
+              <div class="ampm-toggle">
+                <button type="button" class="ampm-btn active" id="once-am" onclick="setAmPm('once','am')">AM</button>
+                <button type="button" class="ampm-btn"        id="once-pm" onclick="setAmPm('once','pm')">PM</button>
+              </div>
+            </div>
           </div>
         </div>
         <!-- Auto cleanup (only shown for once) -->
@@ -575,6 +633,7 @@ textarea { resize: vertical; min-height: 72px; }
 
       <div class="form-footer">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-ghost" onclick="previewReminder()">&#128064; Preview</button>
         <button type="submit" class="btn btn-primary" id="submit-btn">Add Reminder</button>
       </div>
     </form>
@@ -678,34 +737,72 @@ function esc(s) {
 
 // ── Schedule helpers ──────────────────────────────────────────────────────────
 
-const DAY_NAMES = {0:'Sun',1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat'};
-
-function parseHHMM(s) {
-  const [h, m] = (s || '09:00').split(':').map(v => parseInt(v) || 0);
-  return [Math.min(23, Math.max(0, h)), Math.min(59, Math.max(0, m))];
-}
 function p2(n) { return String(n).padStart(2, '0'); }
+
+function toggleDay(btn) { btn.classList.toggle('on'); updatePreview(); }
+
+function setSelectedDays(days) {
+  document.querySelectorAll('#s-days .day-pill').forEach(p => {
+    p.classList.toggle('on', days.includes(p.dataset.day));
+  });
+}
+
+function getSelectedDays() {
+  return [...document.querySelectorAll('#s-days .day-pill.on')].map(p => p.dataset.day);
+}
+
+function setAmPm(prefix, val) {
+  document.getElementById(`${prefix}-am`).classList.toggle('active', val === 'am');
+  document.getElementById(`${prefix}-pm`).classList.toggle('active', val === 'pm');
+  updatePreview();
+}
+
+function setTimePicker(prefix, h24, m) {
+  const ispm = h24 >= 12;
+  let h12 = h24 % 12;
+  if (h12 === 0) h12 = 12;
+  const mRounded = Math.round(m / 5) * 5 % 60;
+  document.getElementById(`${prefix}-hour`).value = String(h12);
+  document.getElementById(`${prefix}-min`).value  = String(mRounded);
+  setAmPm(prefix, ispm ? 'pm' : 'am');
+}
+
+function getTimePicker(prefix) {
+  const h12  = parseInt(document.getElementById(`${prefix}-hour`).value) || 9;
+  const m    = parseInt(document.getElementById(`${prefix}-min`).value)  || 0;
+  const ispm = document.getElementById(`${prefix}-pm`).classList.contains('active');
+  const h24  = h12 % 12 + (ispm ? 12 : 0);
+  return [h24, m];
+}
+
+function buildDayLabel(days, h24, m) {
+  const ispm  = h24 >= 12;
+  let   h12   = h24 % 12;
+  if (h12 === 0) h12 = 12;
+  const time  = `${h12}:${p2(m)} ${ispm ? 'PM' : 'AM'}`;
+  const names = {0:'Sun', 1:'Mon', 2:'Tue', 3:'Wed', 4:'Thu', 5:'Fri', 6:'Sat'};
+  const sorted = [...days].map(Number).sort((a, b) => a - b);
+  if (sorted.length === 7) return `Daily at ${time}`;
+  if (sorted.length === 5 && sorted.join(',') === '1,2,3,4,5') return `Weekdays at ${time}`;
+  if (sorted.length === 1) return `${names[sorted[0]]}s at ${time}`;
+  return sorted.map(d => names[d]).join(', ') + ` at ${time}`;
+}
 
 function buildCron() {
   switch (schedType) {
     case 'interval': {
       const val  = Math.max(1, parseInt(document.getElementById('f-ival').value) || 1);
       const unit = document.getElementById('f-iunit').value;
-      if (unit === 'min') return [`*/${val} * * * *`,  `Every ${val} min${val>1?'s':''}`];
+      if (unit === 'min') return [`*/${val} * * * *`, `Every ${val} min${val>1?'s':''}`];
       return [`0 */${val} * * *`, `Every ${val} hour${val>1?'s':''}`];
     }
-    case 'daily': {
-      const [h,m] = parseHHMM(document.getElementById('f-dtime').value);
-      return [`${m} ${h} * * *`, `Daily at ${p2(h)}:${p2(m)}`];
-    }
-    case 'weekdays': {
-      const [h,m] = parseHHMM(document.getElementById('f-wdtime').value);
-      return [`${m} ${h} * * 1-5`, `Weekdays at ${p2(h)}:${p2(m)}`];
-    }
-    case 'weekly': {
-      const day  = document.getElementById('f-wday').value;
-      const [h,m] = parseHHMM(document.getElementById('f-wtime').value);
-      return [`${m} ${h} * * ${day}`, `${DAY_NAMES[+day]}s at ${p2(h)}:${p2(m)}`];
+    case 'days': {
+      const days = getSelectedDays();
+      if (!days.length) return ['* * * * *', 'Days — pick at least one'];
+      const [h, m] = getTimePicker('days');
+      const sorted = [...days].map(Number).sort((a, b) => a - b);
+      const dayStr = sorted.length === 7 ? '*' : sorted.join(',');
+      return [`${m} ${h} * * ${dayStr}`, buildDayLabel(days, h, m)];
     }
     case 'custom': {
       const c = (document.getElementById('f-cron').value.trim()) || '* * * * *';
@@ -713,19 +810,22 @@ function buildCron() {
     }
     case 'once': {
       const d = document.getElementById('f-once-date').value;
-      const t = document.getElementById('f-once-time').value || '09:00';
       if (!d) return [null, 'Once — pick a date'];
-      const dt  = new Date(`${d}T${t}`);
+      const [h, m] = getTimePicker('once');
+      const dt  = new Date(`${d}T${p2(h)}:${p2(m)}`);
       const fmt = dt.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
-      return [null, `Once on ${fmt} at ${t}`];
+      const ispm = h >= 12;
+      let   h12  = h % 12; if (h12 === 0) h12 = 12;
+      return [null, `Once on ${fmt} at ${h12}:${p2(m)} ${ispm ? 'PM' : 'AM'}`];
     }
   }
 }
 
 function getFireAt() {
   const d = document.getElementById('f-once-date').value;
-  const t = document.getElementById('f-once-time').value || '09:00';
-  return d ? `${d}T${t}:00` : null;
+  if (!d) return null;
+  const [h, m] = getTimePicker('once');
+  return `${d}T${p2(h)}:${p2(m)}:00`;
 }
 
 function updatePreview() {
@@ -735,7 +835,7 @@ function updatePreview() {
 
 function setSched(type) {
   schedType = type;
-  ['interval','daily','weekdays','weekly','custom','once'].forEach(t => {
+  ['interval','days','custom','once'].forEach(t => {
     document.getElementById(`s-${t}`).classList.toggle('hidden', t !== type);
   });
   document.getElementById('s-auto-cleanup').classList.toggle('hidden', type !== 'once');
@@ -750,7 +850,7 @@ function populateSchedule(cron, r = null) {
     setSched('once');
     if (r.fire_at) {
       document.getElementById('f-once-date').value = r.fire_at.substring(0, 10);
-      document.getElementById('f-once-time').value = r.fire_at.substring(11, 16);
+      setTimePicker('once', parseInt(r.fire_at.substring(11, 13)), parseInt(r.fire_at.substring(14, 16)));
     }
     const ac = r.auto_cleanup !== false;
     document.getElementById('f-auto-cleanup').checked = ac;
@@ -759,18 +859,30 @@ function populateSchedule(cron, r = null) {
     return;
   }
 
-  const iMin  = cron.match(/^\*\/(\d+) \* \* \* \*$/);
-  const iHr   = cron.match(/^0 \*\/(\d+) \* \* \*$/);
-  const daily  = cron.match(/^(\d+) (\d+) \* \* \*$/);
-  const wdays  = cron.match(/^(\d+) (\d+) \* \* 1-5$/);
-  const weekly = cron.match(/^(\d+) (\d+) \* \* ([0-6])$/);
+  const iMin      = cron.match(/^\*\/(\d+) \* \* \* \*$/);
+  const iHr       = cron.match(/^0 \*\/(\d+) \* \* \*$/);
+  const daysMatch = cron.match(/^(\d+) (\d+) \* \* ([\d,*-]+)$/);
 
-  if (iMin)        { setSched('interval'); document.getElementById('f-ival').value=iMin[1]; document.getElementById('f-iunit').value='min'; }
-  else if (iHr)    { setSched('interval'); document.getElementById('f-ival').value=iHr[1];  document.getElementById('f-iunit').value='hr'; }
-  else if (wdays)  { setSched('weekdays'); document.getElementById('f-wdtime').value=`${p2(+wdays[2])}:${p2(+wdays[1])}`; }
-  else if (weekly) { setSched('weekly');   document.getElementById('f-wday').value=weekly[3]; document.getElementById('f-wtime').value=`${p2(+weekly[2])}:${p2(+weekly[1])}`; }
-  else if (daily)  { setSched('daily');    document.getElementById('f-dtime').value=`${p2(+daily[2])}:${p2(+daily[1])}`; }
-  else             { setSched('custom');   document.getElementById('f-cron').value=cron; }
+  if (iMin) {
+    setSched('interval');
+    document.getElementById('f-ival').value  = iMin[1];
+    document.getElementById('f-iunit').value = 'min';
+  } else if (iHr) {
+    setSched('interval');
+    document.getElementById('f-ival').value  = iHr[1];
+    document.getElementById('f-iunit').value = 'hr';
+  } else if (daysMatch) {
+    setSched('days');
+    setTimePicker('days', +daysMatch[2], +daysMatch[1]);
+    const spec       = daysMatch[3];
+    const activeDays = spec === '*'   ? ['0','1','2','3','4','5','6']
+                     : spec === '1-5' ? ['1','2','3','4','5']
+                     : spec.split(',');
+    setSelectedDays(activeDays);
+  } else {
+    setSched('custom');
+    document.getElementById('f-cron').value = cron;
+  }
 
   updatePreview();
 }
@@ -785,7 +897,7 @@ function openModal(r = null, prefill = null) {
   document.getElementById('f-message').value = r ? r.message : (prefill ? prefill.message : '');
 
   if (r) { populateSchedule(r.cron, r); }
-  else   { setSched('interval'); document.getElementById('f-ival').value='30'; document.getElementById('f-iunit').value='min'; updatePreview(); }
+  else   { setSched('interval'); document.getElementById('f-ival').value='30'; document.getElementById('f-iunit').value='min'; setSelectedDays(['1','2','3','4','5']); updatePreview(); }
   setNotifyVia(r ? (r.notify_via || ['popup']) : ['popup']);
 
   const blocking = r ? !!r.blocking : false;
@@ -818,6 +930,19 @@ function overlayClick(e) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
+
+async function previewReminder() {
+  const via = getNotifyVia();
+  await api('POST', '/api/preview', {
+    name:              document.getElementById('f-name').value.trim()    || 'Preview',
+    message:           document.getElementById('f-message').value.trim() || 'Preview notification',
+    notify_via:        via.length ? via : ['popup'],
+    blocking:          document.getElementById('f-blocking').checked,
+    blocking_duration: parseInt(document.getElementById('f-bduration').value) || 7,
+    dismissable:       document.getElementById('f-dismissable').checked,
+  });
+  toast('Preview fired');
+}
 
 async function saveReminder(e) {
   e.preventDefault();
@@ -949,7 +1074,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_response(404); self.end_headers()
 
     def do_POST(self):
-        if urlparse(self.path).path == "/api/reminders":
+        path = urlparse(self.path).path
+        if path == "/api/reminders":
             data = load()
             r = self.read_json()
             r["id"]         = str(uuid.uuid4())
@@ -958,6 +1084,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             data.append(r)
             save(data)
             self.send_json(r, 201)
+        elif path == "/api/preview":
+            r           = self.read_json()
+            name        = r.get("name") or "Preview"
+            msg         = r.get("message") or "Preview notification"
+            via         = ",".join(r.get("notify_via") or ["popup"])
+            blocking    = "true" if r.get("blocking") else "false"
+            duration    = str(r.get("blocking_duration") or 7)
+            dismissable = "true" if r.get("dismissable", True) else "false"
+            subprocess.Popen(
+                [NOTIFY_SCRIPT, name, msg, via, blocking, duration, dismissable, "false", ""],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            self.send_json({"ok": True})
         else:
             self.send_response(404); self.end_headers()
 
