@@ -453,10 +453,12 @@ textarea { resize: vertical; min-height: 72px; }
 .tag-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 0; }
 .tag-suggestion {
   padding: 3px 10px;
-  border: 1.5px dashed var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 99px;
   font-size: .75rem;
-  color: var(--muted);
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface2);
   cursor: pointer;
   transition: all .15s;
   user-select: none;
