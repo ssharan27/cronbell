@@ -1,10 +1,10 @@
 # cronbell
 
-> Cron-backed desktop reminders with a local web UI — no cloud, no account, no background app.
+> Cron-backed desktop reminders with a local web UI — no cloud, no account, no background app. Vibecoded.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-**Linux only.** cronbell relies on `crontab`, `systemd --user`, `tkinter`, and X11/Wayland display detection. It does not run on macOS or Windows.
+**macOS and Linux.** cronbell relies on `crontab`, `tkinter` for popup windows, and a platform-native background service (launchd on macOS, systemd on Linux).
 
 ---
 
@@ -24,20 +24,23 @@ You set reminders through a browser UI at `http://localhost:8765`. Each reminder
 
 ## Requirements
 
-| Requirement | Notes |
-|-------------|-------|
-| **Linux** | Required — cron, systemd, and display detection are Linux-specific |
-| **Python 3.6+** with `tkinter` | `sudo apt install python3-tk` |
-| `notify-send` | Optional, for desktop tray notifications — `sudo apt install libnotify-bin` |
-| A desktop environment | X11 or Wayland (for popup windows) |
+| Requirement | macOS | Linux |
+|-------------|-------|-------|
+| **Python 3.6+** with `tkinter` | `brew install python-tk` | `sudo apt install python3-tk` |
+| Desktop notifications | built-in (`osascript`) | `sudo apt install libnotify-bin` |
+| Background service | launchd (built-in) | systemd (built-in) |
+| **macOS 13+ only:** cron Full Disk Access | System Settings → Privacy & Security → Full Disk Access → enable `/usr/sbin/cron` | — |
 
 ---
 
 ## Install
 
-### 1. Install system dependencies
+### 1. Install dependencies
 
 ```bash
+# macOS (Homebrew)
+brew install python-tk
+
 # Debian / Ubuntu
 sudo apt install python3-tk libnotify-bin
 
@@ -58,10 +61,8 @@ cd cronbell
 ./install.sh
 ```
 
-This will:
-- Write `~/.config/systemd/user/reminders.service`
-- Enable and start the service immediately
-- Make `notify.sh` executable
+On **macOS** this writes `~/Library/LaunchAgents/com.user.reminders.plist` and loads it with launchctl.
+On **Linux** this writes `~/.config/systemd/user/reminders.service` and enables it with systemctl.
 
 ### 4. Open the UI
 
@@ -70,12 +71,22 @@ Go to **http://localhost:8765** in your browser. The service starts automaticall
 ### Verify it's running
 
 ```bash
+# macOS
+launchctl list | grep reminders
+
+# Linux
 systemctl --user status reminders
 ```
 
 ### Uninstall
 
 ```bash
+# macOS
+launchctl unload ~/Library/LaunchAgents/com.user.reminders.plist
+rm ~/Library/LaunchAgents/com.user.reminders.plist
+rm -f ~/.reminders.json ~/.reminders-snooze.json
+
+# Linux
 systemctl --user disable --now reminders
 rm ~/.config/systemd/user/reminders.service
 rm -f ~/.reminders.json ~/.reminders-snooze.json
@@ -96,13 +107,14 @@ rm -f ~/.reminders.json ~/.reminders-snooze.json
 
 ```
 cronbell/
-├── reminders.py        # HTTP server + embedded web UI
-├── notify.sh           # Notification dispatcher (called by cron)
-├── popup.py            # Bottom-right popup with snooze / dismiss / follow-up
-├── blocker.py          # Full-screen blocking takeover
-├── snooze_checker.py   # Fires and cleans up snooze queue + one-off reminders
-├── install.sh          # Installs the systemd user service
-└── reminders.service   # systemd unit template
+├── reminders.py                 # HTTP server + embedded web UI
+├── notify.sh                    # Notification dispatcher (called by cron)
+├── popup.py                     # Bottom-right popup with snooze / dismiss / follow-up
+├── blocker.py                   # Full-screen blocking takeover
+├── snooze_checker.py            # Fires and cleans up snooze queue + one-off reminders
+├── install.sh                   # Installs the platform-native background service
+├── reminders.service            # systemd unit template (Linux)
+└── com.user.reminders.plist     # launchd unit template (macOS)
 ```
 
 ---

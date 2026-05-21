@@ -67,7 +67,7 @@ def sync_crontab(reminders):
             duration    = str(r.get("blocking_duration", 7))
             dismissable = "true" if r.get("dismissable", True) else "false"
             lines.append(f'{r["cron"]} {NOTIFY_SCRIPT} "{name}" "{msg}" "{via}" "{blocking}" "{duration}" "{dismissable}" "false" "{r["id"]}"')
-    lines.append(f"* * * * * python3 {SNOOZE_CHECKER} >> /dev/null 2>&1")
+    lines.append(f"* * * * * {sys.executable} {SNOOZE_CHECKER} >> /dev/null 2>&1")
     lines.append(CRON_END)
     lines.append("")
 

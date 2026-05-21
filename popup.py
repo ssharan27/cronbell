@@ -12,6 +12,7 @@ import uuid
 import webbrowser
 from datetime import datetime, timedelta
 from pathlib import Path
+import platform
 import tkinter as tk
 
 title             = sys.argv[1] if len(sys.argv) > 1 else "Reminder"
@@ -37,7 +38,8 @@ WIN_W, WIN_H = 360, 185
 root.update_idletasks()
 sw = root.winfo_screenwidth()
 sh = root.winfo_screenheight()
-root.geometry(f"{WIN_W}x{WIN_H}+{sw - WIN_W - 20}+{sh - WIN_H - 56}")
+bottom_offset = 76 if platform.system() == 'Darwin' else 56
+root.geometry(f"{WIN_W}x{WIN_H}+{sw - WIN_W - 20}+{sh - WIN_H - bottom_offset}")
 
 BG     = "#1e293b"
 BG2    = "#0f172a"
