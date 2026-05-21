@@ -449,6 +449,69 @@ textarea { resize: vertical; min-height: 72px; }
 }
 .ampm-btn.active { background: var(--accent); color: #fff; }
 
+/* ── Tag input (modal) ── */
+.tag-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: text;
+  min-height: 42px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.tag-input-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
+.tag-pill-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 10px;
+  background: #ede9fe;
+  color: #7c3aed;
+  border-radius: 99px;
+  font-size: .75rem;
+  font-weight: 500;
+}
+[data-theme="dark"] .tag-pill-input { background: #312e81; color: #a5b4fc; }
+.tag-pill-remove { line-height: 1; cursor: pointer; opacity: .55; font-size: .65rem; }
+.tag-pill-remove:hover { opacity: 1; }
+.tag-text-input {
+  border: none; outline: none; background: transparent;
+  font-size: .875rem; color: var(--text); font-family: inherit;
+  min-width: 80px; flex: 1; padding: 2px 4px;
+}
+.tag-text-input::placeholder { color: var(--muted); }
+
+/* ── Group headers (list) ── */
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.group-header:first-child { margin-top: 0; }
+.group-label {
+  font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); white-space: nowrap;
+}
+.group-count {
+  font-size: .7rem; font-weight: 600;
+  padding: 1px 7px; background: var(--surface2);
+  color: var(--muted); border-radius: 99px;
+}
+.group-line  { flex: 1; height: 1px; background: var(--border); }
+.group-chevron { font-size: .65rem; color: var(--muted); transition: transform .2s; }
+.group-chevron.collapsed { transform: rotate(-90deg); }
+
 .hidden { display: none !important; }
 </style>
 </head>
@@ -482,6 +545,14 @@ textarea { resize: vertical; min-height: 72px; }
       <div class="form-group">
         <label for="f-message">Message <span class="req" aria-label="required">*</span></label>
         <textarea id="f-message" placeholder="e.g. Time for stand-up!" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Tags <span style="color:var(--muted);font-weight:400;font-size:.8rem">(optional, press Enter or ,)</span></label>
+        <div class="tag-input-wrap" id="tag-input-wrap" onclick="document.getElementById('tag-text-input').focus()">
+          <input type="text" id="tag-text-input" class="tag-text-input" placeholder="e.g. health, work"
+                 onkeydown="tagKeydown(event)" oninput="tagInputHandler(event)">
+        </div>
       </div>
 
       <div class="form-group">
@@ -646,9 +717,12 @@ textarea { resize: vertical; min-height: 72px; }
 <script>
 'use strict';
 
-let reminders = [];
-let editingId = null;
-let schedType = 'interval';
+let reminders    = [];
+let editingId    = null;
+let schedType    = 'interval';
+let currentTags  = [];
+let collapseState = {};
+try { collapseState = JSON.parse(localStorage.getItem('cronbell-collapse') || '{}'); } catch(_) {}
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
@@ -662,6 +736,12 @@ async function api(method, path, body) {
 
 // ── Render ───────────────────────────────────────────────────────────────────
 
+function toggleGroup(key) {
+  collapseState[key] = !collapseState[key];
+  try { localStorage.setItem('cronbell-collapse', JSON.stringify(collapseState)); } catch(_) {}
+  render();
+}
+
 function render() {
   const el = document.getElementById('list');
   if (!reminders.length) {
@@ -673,10 +753,47 @@ function render() {
       </div>`;
     return;
   }
-  el.innerHTML = `<div class="reminder-list">${reminders.map(cardHTML).join('')}</div>`;
+
+  const hasAnyTags = reminders.some(r => r.tags && r.tags.length);
+  if (!hasAnyTags) {
+    el.innerHTML = `<div class="reminder-list">${reminders.map(cardHTML).join('')}</div>`;
+    return;
+  }
+
+  // Group by first tag; untagged → key ''
+  const groups = {};
+  reminders.forEach(r => {
+    const key = (r.tags && r.tags.length) ? r.tags[0] : '';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+
+  const tagKeys = Object.keys(groups).filter(k => k).sort();
+  if (groups['']) tagKeys.push('');
+
+  let html = '<div class="reminder-list">';
+  tagKeys.forEach(key => {
+    const items     = groups[key];
+    const label     = key || 'General';
+    const colKey    = key || '__general__';
+    const collapsed = !!collapseState[colKey];
+    html += `
+      <div class="group-header" data-key="${esc(colKey)}" onclick="toggleGroup(this.dataset.key)">
+        <span class="group-label">${esc(label)}</span>
+        <span class="group-count">${items.length}</span>
+        <span class="group-line"></span>
+        <span class="group-chevron${collapsed ? ' collapsed' : ''}">▾</span>
+      </div>`;
+    if (!collapsed) items.forEach(r => { html += cardHTML(r); });
+  });
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 function cardHTML(r) {
+  const tagBadges = (r.tags || []).map(t =>
+    `<span class="badge badge-muted">&#35;${esc(t)}</span>`
+  ).join('');
   return `
   <div class="card${r.enabled ? '' : ' disabled'}" id="card-${r.id}">
     <div class="card-stripe" style="${r.blocking ? 'background:#ef4444' : ''}"></div>
@@ -689,6 +806,7 @@ function cardHTML(r) {
           : `<span class="badge badge-accent">&#9200; ${esc(r.schedule_label)}</span>`}
         ${r.blocking ? `<span class="badge badge-blocking">&#128683; ${r.blocking_duration || 7}s</span>` : `<span class="badge badge-muted">${notifyViaLabel(r.notify_via || ['popup'])}</span>`}
         ${r.fired ? `<span class="badge badge-fired">Fired</span>` : `<span class="badge badge-muted">${r.enabled ? 'Active' : 'Paused'}</span>`}
+        ${tagBadges}
       </div>
     </div>
     <div class="card-actions">
@@ -701,6 +819,52 @@ function cardHTML(r) {
     </div>
   </div>`;
 }
+
+// ── Tags ──────────────────────────────────────────────────────────────────────
+
+function renderTagPills() {
+  const wrap  = document.getElementById('tag-input-wrap');
+  const input = document.getElementById('tag-text-input');
+  wrap.querySelectorAll('.tag-pill-input').forEach(p => p.remove());
+  currentTags.forEach((tag, i) => {
+    const pill = document.createElement('span');
+    pill.className = 'tag-pill-input';
+    pill.innerHTML = `${esc(tag)}<span class="tag-pill-remove" onclick="removeTag(${i})">&#10005;</span>`;
+    wrap.insertBefore(pill, input);
+  });
+}
+
+function addTag(raw) {
+  const tag = raw.trim().toLowerCase().replace(/[,#\s]+/g, '-').replace(/^-|-$/g, '');
+  if (!tag || currentTags.includes(tag)) return;
+  currentTags.push(tag);
+  renderTagPills();
+}
+
+function removeTag(i) {
+  currentTags.splice(i, 1);
+  renderTagPills();
+}
+
+function tagKeydown(e) {
+  const input = e.target;
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    if (input.value.trim()) { addTag(input.value); input.value = ''; }
+  } else if (e.key === 'Backspace' && !input.value && currentTags.length) {
+    removeTag(currentTags.length - 1);
+  }
+}
+
+function tagInputHandler(e) {
+  if (e.target.value.includes(',')) {
+    e.target.value.split(',').forEach(p => addTag(p));
+    e.target.value = '';
+  }
+}
+
+function getTags()       { return [...currentTags]; }
+function setTags(tags)   { currentTags = [...(tags || [])]; renderTagPills(); }
 
 // ── Notify-via helpers ───────────────────────────────────────────────────────
 
@@ -896,6 +1060,7 @@ function openModal(r = null, prefill = null) {
   document.getElementById('f-name').value    = r ? r.name    : (prefill ? prefill.name    : '');
   document.getElementById('f-message').value = r ? r.message : (prefill ? prefill.message : '');
 
+  setTags(r ? (r.tags || []) : []);
   if (r) { populateSchedule(r.cron, r); }
   else   { setSched('interval'); document.getElementById('f-ival').value='30'; document.getElementById('f-iunit').value='min'; setSelectedDays(['1','2','3','4','5']); updatePreview(); }
   setNotifyVia(r ? (r.notify_via || ['popup']) : ['popup']);
@@ -960,6 +1125,7 @@ async function saveReminder(e) {
     one_off:           isOnce,
     fire_at:           isOnce ? getFireAt() : null,
     auto_cleanup:      isOnce ? document.getElementById('f-auto-cleanup').checked : false,
+    tags:              getTags(),
     enabled: true,
   };
   if (!data.name || !data.message) return;
