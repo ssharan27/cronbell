@@ -99,6 +99,7 @@ HTML = r"""<!DOCTYPE html>
   --radius:       12px;
   --shadow:       0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
   --shadow-lg:    0 10px 15px -3px rgba(0,0,0,.10), 0 4px 6px -2px rgba(0,0,0,.05);
+  color-scheme: light;
 }
 
 [data-theme="dark"] {

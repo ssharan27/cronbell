@@ -50,6 +50,9 @@ BTN_SM = {"relief": "flat", "bd": 0, "padx": 8, "pady": 4, "cursor": "hand2",
            "font": ("sans-serif", 8, "bold")}
 
 root.configure(bg=BG)
+root.tk_setPalette(background=BG, foreground=FG,
+                   activeBackground=ACCENT, activeForeground="#fff",
+                   highlightBackground=BG, highlightColor=ACCENT)
 tk.Frame(root, bg=ACCENT, height=3).pack(fill="x")
 
 body = tk.Frame(root, bg=BG, padx=16, pady=10)
