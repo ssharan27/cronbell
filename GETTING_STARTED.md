@@ -1,6 +1,16 @@
 # Getting Started with Notifier
 
-Notifier lets you set up reminders that pop up on your desktop — no accounts, no cloud, nothing running in the background except a small local server. Reminders are powered by your system's cron, so they fire even if you close the browser tab.
+Notifier lets you set up reminders that pop up on your desktop — no accounts, no cloud, nothing running in the background except a small local server. Reminders are powered by your system's cron, so they fire even if you close the browser tab. Vibecoded.
+
+---
+
+## Prerequisites
+
+**Python 3 with tkinter** (required for popups):
+- macOS (Homebrew): `brew install python-tk`
+- Linux (Debian/Ubuntu): `sudo apt install python3-tk`
+
+**macOS only — cron Full Disk Access:** On macOS 13+, cron needs Full Disk Access to read and write `~/.reminders*.json`. Go to System Settings → Privacy & Security → Full Disk Access and enable `/usr/sbin/cron`.
 
 ---
 
@@ -84,11 +94,13 @@ From the reminder list you can:
 
 The service runs in the background automatically. If you ever need to control it:
 
-```bash
-systemctl --user stop    reminders   # stop
-systemctl --user start   reminders   # start
-systemctl --user restart reminders   # restart (after updates)
-```
+| Action | macOS | Linux |
+|--------|-------|-------|
+| Status | `launchctl list \| grep reminders` | `systemctl --user status reminders` |
+| Stop | `launchctl stop com.user.reminders` | `systemctl --user stop reminders` |
+| Start | `launchctl start com.user.reminders` | `systemctl --user start reminders` |
+| Logs | `tail -f /tmp/reminders.log` | `journalctl --user -u reminders -f` |
+| Uninstall | `launchctl unload ~/Library/LaunchAgents/com.user.reminders.plist && rm ~/Library/LaunchAgents/com.user.reminders.plist` | `systemctl --user disable --now reminders && rm ~/.config/systemd/user/reminders.service` |
 
 Reminders continue firing from cron even when the service is stopped — you just won't be able to reach the web UI until it's running again.
 
@@ -105,6 +117,13 @@ cd ~/Desktop/playground/notifier
 If the popup appears, cron is the issue — see the [README](README.md#notifications-from-cron) for display detection fixes.
 
 **UI not loading at http://localhost:8765**
+
+macOS:
+```bash
+launchctl list | grep reminders
+launchctl start com.user.reminders
+```
+Linux:
 ```bash
 systemctl --user status reminders
 systemctl --user start  reminders
@@ -114,6 +133,15 @@ systemctl --user start  reminders
 Delete it from the UI. The crontab entry is removed automatically.
 
 **I want to uninstall everything**
+
+macOS:
+```bash
+launchctl unload ~/Library/LaunchAgents/com.user.reminders.plist
+rm ~/Library/LaunchAgents/com.user.reminders.plist
+rm ~/.reminders.json
+rm ~/.reminders-snooze.json
+```
+Linux:
 ```bash
 systemctl --user disable --now reminders
 rm ~/.config/systemd/user/reminders.service

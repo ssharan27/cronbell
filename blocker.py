@@ -12,6 +12,7 @@ import uuid
 import webbrowser
 from datetime import datetime, timedelta
 from pathlib import Path
+import platform
 import tkinter as tk
 
 title             = sys.argv[1] if len(sys.argv) > 1 else "Reminder"
@@ -28,7 +29,11 @@ UI_URL      = "http://localhost:8765"
 
 # ── Window ────────────────────────────────────────────────────────────────────
 root = tk.Tk()
-root.attributes("-fullscreen", True)
+if platform.system() == 'Darwin':
+    root.overrideredirect(True)
+    root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}+0+0")
+else:
+    root.attributes("-fullscreen", True)
 root.attributes("-topmost", True)
 root.configure(bg="black")
 root.focus_force()
