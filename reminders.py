@@ -172,9 +172,9 @@ header p   { color: var(--muted); font-size: .875rem; margin-top: 3px; }
   background: var(--surface);
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  padding: 18px 20px;
+  padding: 12px 16px;
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: flex-start;
   box-shadow: var(--shadow);
   transition: box-shadow .15s, opacity .2s;
@@ -193,7 +193,7 @@ header p   { color: var(--muted); font-size: .875rem; margin-top: 3px; }
 
 .card-body   { flex: 1; min-width: 0; }
 .card-name   { font-size: 1rem; font-weight: 600; margin-bottom: 3px; }
-.card-msg    { font-size: .875rem; color: var(--muted); margin-bottom: 10px;
+.card-msg    { font-size: .8125rem; color: var(--muted); margin-bottom: 8px;
                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-meta   { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
@@ -449,6 +449,21 @@ textarea { resize: vertical; min-height: 72px; }
 }
 .ampm-btn.active { background: var(--accent); color: #fff; }
 
+/* ── Tag suggestions ── */
+.tag-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 0; }
+.tag-suggestion {
+  padding: 3px 10px;
+  border: 1.5px dashed var(--border);
+  border-radius: 99px;
+  font-size: .75rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+.tag-suggestion:hover { border-color: var(--accent); color: var(--accent); background: #ede9fe; }
+[data-theme="dark"] .tag-suggestion:hover { background: #312e81; color: #a5b4fc; border-color: var(--accent); }
+
 /* ── Tag input (modal) ── */
 .tag-input-wrap {
   display: flex;
@@ -490,10 +505,16 @@ textarea { resize: vertical; min-height: 72px; }
 
 /* ── Group headers (list) ── */
 .group-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 24px 0 8px;
+  padding: 10px 0 8px;
+  margin: 8px 0 6px;
+  background: var(--bg);
+  backdrop-filter: blur(8px);
   cursor: pointer;
   user-select: none;
 }
@@ -553,6 +574,7 @@ textarea { resize: vertical; min-height: 72px; }
           <input type="text" id="tag-text-input" class="tag-text-input" placeholder="e.g. health, work"
                  onkeydown="tagKeydown(event)" oninput="tagInputHandler(event)">
         </div>
+        <div id="tag-suggestions" class="tag-suggestions"></div>
       </div>
 
       <div class="form-group">
@@ -834,16 +856,34 @@ function renderTagPills() {
   });
 }
 
+function updateTagSuggestions() {
+  const el = document.getElementById('tag-suggestions');
+  if (!el) return;
+  const typed    = (document.getElementById('tag-text-input').value || '').toLowerCase();
+  const allTags  = [...new Set(reminders.flatMap(r => r.tags || []))];
+  const filtered = allTags.filter(t => !currentTags.includes(t) && (!typed || t.includes(typed)));
+  el.innerHTML   = filtered.map(t =>
+    `<span class="tag-suggestion" onclick="selectSuggestion('${esc(t)}')">${esc(t)}</span>`
+  ).join('');
+}
+
+function selectSuggestion(tag) {
+  document.getElementById('tag-text-input').value = '';
+  addTag(tag);
+}
+
 function addTag(raw) {
   const tag = raw.trim().toLowerCase().replace(/[,#\s]+/g, '-').replace(/^-|-$/g, '');
   if (!tag || currentTags.includes(tag)) return;
   currentTags.push(tag);
   renderTagPills();
+  updateTagSuggestions();
 }
 
 function removeTag(i) {
   currentTags.splice(i, 1);
   renderTagPills();
+  updateTagSuggestions();
 }
 
 function tagKeydown(e) {
@@ -860,11 +900,13 @@ function tagInputHandler(e) {
   if (e.target.value.includes(',')) {
     e.target.value.split(',').forEach(p => addTag(p));
     e.target.value = '';
+  } else {
+    updateTagSuggestions();
   }
 }
 
-function getTags()       { return [...currentTags]; }
-function setTags(tags)   { currentTags = [...(tags || [])]; renderTagPills(); }
+function getTags()     { return [...currentTags]; }
+function setTags(tags) { currentTags = [...(tags || [])]; renderTagPills(); updateTagSuggestions(); }
 
 // ── Notify-via helpers ───────────────────────────────────────────────────────
 
