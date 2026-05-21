@@ -13,6 +13,7 @@ import webbrowser
 from datetime import datetime, timedelta
 from pathlib import Path
 import tkinter as tk
+import tkinter.ttk as ttk
 
 title             = sys.argv[1] if len(sys.argv) > 1 else "Reminder"
 message           = sys.argv[2] if len(sys.argv) > 2 else ""
@@ -31,32 +32,35 @@ root = tk.Tk()
 root.attributes("-fullscreen", True)
 root.attributes("-topmost", True)
 root.configure(bg="black")
-root.tk_setPalette(background="black", foreground="white",
-                   activeBackground="#1e293b", activeForeground="white",
-                   highlightBackground="black")
+
+# Use clam theme for labels so macOS Aqua cannot override text colours
+_s = ttk.Style(root)
+_s.theme_use('clam')
+_s.configure('BTitle.TLabel',  background='black', foreground='white',   font=("sans-serif", 28, "bold"))
+_s.configure('BMsg.TLabel',    background='black', foreground='#cccccc', font=("sans-serif", 18))
+_s.configure('BCount.TLabel',  background='black', foreground='#555555', font=("sans-serif", 13))
+_s.configure('BSnooze.TLabel', background='black', foreground='#666666', font=("sans-serif", 10))
+
 root.focus_force()
 
 frame = tk.Frame(root, bg="black")
 frame.place(relx=0.5, rely=0.5, anchor="center")
 
-tk.Label(frame, text=title, bg="black", fg="white",
-         font=("sans-serif", 28, "bold"), justify="center").pack(pady=(0, 20))
+ttk.Label(frame, text=title, style='BTitle.TLabel', justify="center").pack(pady=(0, 20))
 
-tk.Label(frame, text=message, bg="black", fg="#cccccc",
-         font=("sans-serif", 18), wraplength=800, justify="center").pack()
+ttk.Label(frame, text=message, style='BMsg.TLabel',
+          wraplength=800, justify="center").pack()
 
-tk.Label(frame, text="", bg="black").pack(pady=(32, 0))
+tk.Frame(frame, bg="black", height=32).pack()
 
 countdown_var = tk.StringVar(value=f"closes in {duration}s")
-tk.Label(frame, textvariable=countdown_var, bg="black", fg="#555555",
-         font=("sans-serif", 13)).pack(pady=(8, 0))
+ttk.Label(frame, textvariable=countdown_var, style='BCount.TLabel').pack(pady=(8, 0))
 
 # ── Snooze row ────────────────────────────────────────────────────────────────
 snooze_row = tk.Frame(frame, bg="black")
 snooze_row.pack(pady=(28, 0))
 
-tk.Label(snooze_row, text="Snooze:", bg="black", fg="#666666",
-         font=("sans-serif", 10)).pack(side="left", padx=(0, 10))
+ttk.Label(snooze_row, text="Snooze:", style='BSnooze.TLabel').pack(side="left", padx=(0, 10))
 
 def write_snooze(mins):
     entries = []

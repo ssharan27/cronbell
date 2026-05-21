@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import platform
 import tkinter as tk
+import tkinter.ttk as ttk
 
 title             = sys.argv[1] if len(sys.argv) > 1 else "Reminder"
 message           = sys.argv[2] if len(sys.argv) > 2 else ""
@@ -50,27 +51,29 @@ BTN_SM = {"relief": "flat", "bd": 0, "padx": 8, "pady": 4, "cursor": "hand2",
            "font": ("sans-serif", 8, "bold")}
 
 root.configure(bg=BG)
-root.tk_setPalette(background=BG, foreground=FG,
-                   activeBackground=ACCENT, activeForeground="#fff",
-                   highlightBackground=BG, highlightColor=ACCENT)
+
+# Use clam theme for labels so macOS Aqua cannot override text colours
+_s = ttk.Style(root)
+_s.theme_use('clam')
+_s.configure('P.TLabel',     background=BG, foreground=FG,   font=("sans-serif", 11, "bold"))
+_s.configure('PMuted.TLabel',background=BG, foreground=MUTED, font=("sans-serif", 10))
+_s.configure('PSmall.TLabel',background=BG, foreground=MUTED, font=("sans-serif", 8))
+
 tk.Frame(root, bg=ACCENT, height=3).pack(fill="x")
 
 body = tk.Frame(root, bg=BG, padx=16, pady=10)
 body.pack(fill="both", expand=True)
 
-tk.Label(body, text=f"⏰  {title}", bg=BG, fg=FG,
-         font=("sans-serif", 11, "bold"), anchor="w").pack(fill="x")
+ttk.Label(body, text=f"⏰  {title}", style='P.TLabel', anchor="w").pack(fill="x")
 
-tk.Label(body, text=message, bg=BG, fg=MUTED,
-         font=("sans-serif", 10), anchor="w",
-         wraplength=326, justify="left").pack(fill="x", pady=(3, 10))
+ttk.Label(body, text=message, style='PMuted.TLabel', anchor="w",
+          wraplength=326, justify="left").pack(fill="x", pady=(3, 10))
 
 # ── Snooze row ────────────────────────────────────────────────────────────────
 snooze_row = tk.Frame(body, bg=BG)
 snooze_row.pack(fill="x", pady=(0, 6))
 
-tk.Label(snooze_row, text="Snooze:", bg=BG, fg=MUTED,
-         font=("sans-serif", 8)).pack(side="left", padx=(0, 6))
+ttk.Label(snooze_row, text="Snooze:", style='PSmall.TLabel').pack(side="left", padx=(0, 6))
 
 def write_snooze(mins):
     entries = []
@@ -122,8 +125,8 @@ if one_off:
 
 # ── Countdown ─────────────────────────────────────────────────────────────────
 countdown = tk.StringVar(value=f"auto-closes in {AUTO_CLOSE}s")
-tk.Label(body, textvariable=countdown, bg=BG, fg=MUTED,
-         font=("sans-serif", 8), anchor="e").pack(fill="x", pady=(6, 0))
+ttk.Label(body, textvariable=countdown, style='PSmall.TLabel',
+          anchor="e").pack(fill="x", pady=(6, 0))
 
 remaining = [AUTO_CLOSE]
 
