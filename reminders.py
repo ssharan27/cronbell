@@ -864,9 +864,12 @@ function updateTagSuggestions() {
   const typed    = (document.getElementById('tag-text-input').value || '').toLowerCase();
   const allTags  = [...new Set(reminders.flatMap(r => r.tags || []))];
   const filtered = allTags.filter(t => !currentTags.includes(t) && (!typed || t.includes(typed)));
-  el.innerHTML   = filtered.map(t =>
-    `<span class="tag-suggestion" onclick="selectSuggestion('${esc(t)}')">${esc(t)}</span>`
-  ).join('');
+  el.innerHTML = filtered.length
+    ? `<span style="font-size:.75rem;color:var(--muted);align-self:center">suggested:</span>`
+      + filtered.map(t =>
+          `<span class="tag-suggestion" onclick="selectSuggestion('${esc(t)}')">${esc(t)}</span>`
+        ).join('')
+    : '';
 }
 
 function selectSuggestion(tag) {
