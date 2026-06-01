@@ -656,14 +656,18 @@ textarea { resize: vertical; min-height: 72px; }
             <label for="f-once-date">Date</label>
             <input type="date" id="f-once-date" oninput="updatePreview()">
           </div>
-          <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0">
-            <label>Time</label>
+          <div class="form-group" style="flex:1;min-width:100px;margin-bottom:0">
+            <label>Time (24h)</label>
             <div class="time-picker">
               <select id="once-hour" onchange="updatePreview()">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                <option value="7">7</option><option value="8">8</option><option value="9" selected>9</option>
-                <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                <option value="0">00</option><option value="1">01</option><option value="2">02</option>
+                <option value="3">03</option><option value="4">04</option><option value="5">05</option>
+                <option value="6">06</option><option value="7">07</option><option value="8">08</option>
+                <option value="9" selected>09</option><option value="10">10</option><option value="11">11</option>
+                <option value="12">12</option><option value="13">13</option><option value="14">14</option>
+                <option value="15">15</option><option value="16">16</option><option value="17">17</option>
+                <option value="18">18</option><option value="19">19</option><option value="20">20</option>
+                <option value="21">21</option><option value="22">22</option><option value="23">23</option>
               </select>
               <span class="time-colon">:</span>
               <select id="once-min" onchange="updatePreview()">
@@ -672,10 +676,6 @@ textarea { resize: vertical; min-height: 72px; }
                 <option value="30">30</option><option value="35">35</option><option value="40">40</option>
                 <option value="45">45</option><option value="50">50</option><option value="55">55</option>
               </select>
-              <div class="ampm-toggle">
-                <button type="button" class="ampm-btn active" id="once-am" onclick="setAmPm('once','am')">AM</button>
-                <button type="button" class="ampm-btn"        id="once-pm" onclick="setAmPm('once','pm')">PM</button>
-              </div>
             </div>
           </div>
         </div>
@@ -1023,12 +1023,11 @@ function buildCron() {
     case 'once': {
       const d = document.getElementById('f-once-date').value;
       if (!d) return [null, 'Once — pick a date'];
-      const [h, m] = getTimePicker('once');
+      const h = parseInt(document.getElementById('once-hour').value) || 0;
+      const m = parseInt(document.getElementById('once-min').value)  || 0;
       const dt  = new Date(`${d}T${p2(h)}:${p2(m)}`);
       const fmt = dt.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
-      const ispm = h >= 12;
-      let   h12  = h % 12; if (h12 === 0) h12 = 12;
-      return [null, `Once on ${fmt} at ${h12}:${p2(m)} ${ispm ? 'PM' : 'AM'}`];
+      return [null, `Once on ${fmt} at ${p2(h)}:${p2(m)}`];
     }
   }
 }
@@ -1036,7 +1035,8 @@ function buildCron() {
 function getFireAt() {
   const d = document.getElementById('f-once-date').value;
   if (!d) return null;
-  const [h, m] = getTimePicker('once');
+  const h = parseInt(document.getElementById('once-hour').value) || 0;
+  const m = parseInt(document.getElementById('once-min').value)  || 0;
   return `${d}T${p2(h)}:${p2(m)}:00`;
 }
 
@@ -1062,7 +1062,8 @@ function populateSchedule(cron, r = null) {
     setSched('once');
     if (r.fire_at) {
       document.getElementById('f-once-date').value = r.fire_at.substring(0, 10);
-      setTimePicker('once', parseInt(r.fire_at.substring(11, 13)), parseInt(r.fire_at.substring(14, 16)));
+      document.getElementById('once-hour').value = String(parseInt(r.fire_at.substring(11, 13)));
+      document.getElementById('once-min').value  = String(Math.round(parseInt(r.fire_at.substring(14, 16)) / 5) * 5 % 60);
     }
     const ac = r.auto_cleanup !== false;
     document.getElementById('f-auto-cleanup').checked = ac;
